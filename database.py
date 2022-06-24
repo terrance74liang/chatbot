@@ -6,11 +6,7 @@ from spacy.strings import StringStore
 from multiprocessing import Process
 from psutil import cpu_count
 import math
-
-
-twitter_file = (
-    r"C:\Users\crapg\OneDrive\Documents\datasets\twitter customer support\twcs.csv"
-)
+from sqlalchemy import true
 
 nlp = sp.load("en_core_web_sm")
 
@@ -32,6 +28,7 @@ def tagger(data_csv):
 
 # stores text in string store to avoid duplication and named entitities. hash lookup
 def string_storing(text):
+    text = text.reset_index(drop=True)
     for i in range(1, len(text.index)):
         doc = nlp(text[i - 1])
         for token in doc:
@@ -58,17 +55,17 @@ def csv_to_json(fileName):
     processes = []
     rows = nm_datasets
 
-    # avoids dataframe unpacking
-    class wrapper:
-        def __init__(self, num1, num2):
-            self.txt = text_column[num1:num2]
-
     for subprocess in range(0, cpu_count()):
         processes.append(
-            Process(target=string_storing, args=wrapper(rows - nm_datasets, rows).txt)
+            Process(
+                target=string_storing, args=(text_column[rows - nm_datasets : rows],)
+            )
         )
         rows += nm_datasets
     for process in processes:
         process.start()
+    for subprocess in processes:
+        subprocess.join()
+
     vector_storing()
 

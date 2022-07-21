@@ -2,16 +2,15 @@ import multiprocessing
 import pandas as pd
 import spacy as sp
 import numpy as np
-from multiprocessing import Process, Manager, Lock
+from multiprocessing import Process, Manager
 from psutil import cpu_count, Process, cpu_times
 import psutil
 import math
 from sqlalchemy import true
 import os
+import pickle
 
 nlp = sp.load("en_core_web_sm")
-
-vectors = pd.DataFrame()
 
 # form any column base dataset, enables selection of the text data column
 def tagger(data_csv):
@@ -32,7 +31,6 @@ def string_storing(text, string_st, list_man, incr, num):
     for i in range(1, len(text.index)):
         doc = nlp(text[i - 1])
         for token in doc:
-            # curr[num] = token.text.lower()
             if (token.text in [x.text for x in doc.ents]) or (
                 token.pos_.upper() in ["SYM", "X", "NUM"]
             ):
@@ -57,28 +55,16 @@ def string_storing(text, string_st, list_man, incr, num):
                 continue
 
 
-# converts words to vectors and stores them
-# def vector_storing():
-#     global vectors
-#     for s in string_store:
-#         word = nlp(s)[0]
-#         vectors = pd.concat(
-#             [vectors, pd.DataFrame(word.vector, columns=[word.text])], axis=1
-#         )
-#     vectors.to_excel("vectors_database.xlsx", index=False)
-
-
 def csv_to_json(fileName):
     inc = multiprocessing.Value("i", 0)
     with multiprocessing.Manager() as manager_:
         list_of_managers = [manager_.list() for i in range(0, 5000)]
-        # current = manager_.dict().keys([x for x in range(1, cpu_count()+1)])
         string_store = manager_.dict()
         string_store["PUNCT"] = list_of_managers[0]
         inc.value = 1
         data_csv = pd.read_csv(fileName)
         text_column = tagger(data_csv)
-        nm_datasets = math.floor(len(data_csv.index) * cpu_count())
+        nm_datasets = math.floor(len(data_csv.index) / cpu_count())
         processes = []
         rows = nm_datasets
         for subprocess in range(1, cpu_count() + 1):
@@ -102,5 +88,9 @@ def csv_to_json(fileName):
         for subprocess in processes:
             subprocess.join()
 
-        print(string_store.get("a"))
+        normal_list = [list(sublist) for sublist in list_of_managers[0 : inc.value]]
+
+        with open("list_of_vectors.pickle", "wb") as pickler:
+            pickle.dump(obj=normal_list, file=pickler)
+            return pickler.name
 

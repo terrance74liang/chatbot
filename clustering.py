@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn.cluster import spectral_clustering
+from sklearn.cluster import SpectralClustering, AgglomerativeClustering
 from sklearn.neighbors import kneighbors_graph
 import numpy as np
 import pickle
@@ -10,7 +10,7 @@ import math
 def pickle_reader(pickle_file_name):
     with open(pickle_file_name, "rb") as pickler:
         data = pickle.load(pickler)
-        expanded_array = np.array(data).flatten()
+        expanded_array = [y for x in data for y in x]
         array_of_vectors = np.array([x[1] for x in expanded_array])
         array_of_words = np.array([x[0] for x in expanded_array])
         return array_of_words, array_of_vectors
@@ -18,23 +18,18 @@ def pickle_reader(pickle_file_name):
 
 # takes the vectors as data
 def cluster_optimizer(data):
-    kngraph = np.array(
-        kneighbors_graph(
-            data,
-            n_neighbors=math.sqrt(len(data)),
-            mode="connectivity",
-            metric="euclidean",
-        )
-    )
+    length = 4
+    kngraph = kneighbors_graph(
+        data, n_neighbors=length, mode="connectivity", metric="euclidean",
+    ).toarray()
     laplacian_graph = laplacian(kngraph, use_out_degree=False)
-    eigenvalues, eigenvectors = np.linalg.eig(laplacian_graph.toarray())
+    eigenvalues, eigenvectors = np.linalg.eig(laplacian_graph)
     count = 0
     for x in list(eigenvalues):
         if x == 0:
             count += 1
         else:
             break
-
     count2 = 0
     index1 = iter(range(0, count))
     index2 = iter(range(0, count))
@@ -54,10 +49,11 @@ def cluster_optimizer(data):
 
 
 def spec_cluster(vectors, words, num):
-    sc = spectral_clustering(
+    sc = SpectralClustering(
         n_clusters=num, affinity="nearest_neighbors", assign_labels="cluster_qr"
     )
     cluster_labels = sc.fit_predict(vectors)
     word_to_label = pd.DataFrame(words, columns=["words"])
     word_to_label["labels"] = cluster_labels
     return word_to_label
+

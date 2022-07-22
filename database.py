@@ -6,7 +6,6 @@ from multiprocessing import Process, Manager
 from psutil import cpu_count, Process, cpu_times
 import psutil
 import math
-from sqlalchemy import true
 import os
 import pickle
 
@@ -93,4 +92,3 @@ def csv_to_json(fileName):
         with open("list_of_vectors.pickle", "wb") as pickler:
             pickle.dump(obj=normal_list, file=pickler)
             return pickler.name
-

@@ -20,7 +20,10 @@ def pickle_reader(pickle_file_name):
 def cluster_optimizer(data):
     length = 4
     kngraph = kneighbors_graph(
-        data, n_neighbors=length, mode="connectivity", metric="euclidean",
+        data,
+        n_neighbors=length,
+        mode="connectivity",
+        metric="euclidean",
     ).toarray()
     laplacian_graph = laplacian(kngraph, use_out_degree=False)
     eigenvalues, eigenvectors = np.linalg.eig(laplacian_graph)
@@ -33,17 +36,19 @@ def cluster_optimizer(data):
     count2 = 0
     index1 = iter(range(0, count))
     index2 = iter(range(0, count))
+    ind1 = next(index1)
+    ind2 = next(index2)
     list_of_eigenvectors = [list(x) for x in eigenvectors]
     for x in list_of_eigenvectors[0:count]:
         for y in list_of_eigenvectors[0:count]:
-            if index1 == index2:
-                next(index2)
+            if ind1 == ind2:
+                ind2 = next(index2)
                 continue
             if x == y:
                 count2 += 1
-                next(index2)
+                ind2 = next(index2)
 
-        next(index1)
+        ind2 = next(index1)
 
     return count2
 
@@ -56,4 +61,3 @@ def spec_cluster(vectors, words, num):
     word_to_label = pd.DataFrame(words, columns=["words"])
     word_to_label["labels"] = cluster_labels
     return word_to_label
-

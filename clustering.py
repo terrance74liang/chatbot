@@ -1,10 +1,12 @@
 import pandas as pd
+import sklearn
 from sklearn.cluster import SpectralClustering, AgglomerativeClustering
 from sklearn.neighbors import kneighbors_graph
 import numpy as np
 import pickle
 from scipy.sparse.csgraph import laplacian
 import math
+from sklearn.preprocessing import StandardScaler
 
 
 def pickle_reader(pickle_file_name):
@@ -18,7 +20,8 @@ def pickle_reader(pickle_file_name):
 
 # takes the vectors as data
 def cluster_optimizer(data):
-    length = 4
+    data = StandardScaler().fit_transform(X=data)
+    length = int(math.sqrt(math.sqrt(len(data))))
     kngraph = kneighbors_graph(
         data,
         n_neighbors=length,
@@ -33,27 +36,12 @@ def cluster_optimizer(data):
             count += 1
         else:
             break
-    count2 = 0
-    index1 = iter(range(0, count))
-    index2 = iter(range(0, count))
-    ind1 = next(index1)
-    ind2 = next(index2)
-    list_of_eigenvectors = [list(x) for x in eigenvectors]
-    for x in list_of_eigenvectors[0:count]:
-        for y in list_of_eigenvectors[0:count]:
-            if ind1 == ind2:
-                ind2 = next(index2)
-                continue
-            if x == y:
-                count2 += 1
-                ind2 = next(index2)
-
-        ind2 = next(index1)
-
-    return count2
+    eigenvectors = len(set(eigenvectors[0, count]))
+    return eigenvectors
 
 
 def spec_cluster(vectors, words, num):
+    num = max(num, int(math.sqrt(len(vectors))))
     sc = SpectralClustering(
         n_clusters=num, affinity="nearest_neighbors", assign_labels="cluster_qr"
     )

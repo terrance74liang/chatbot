@@ -1,6 +1,8 @@
+from audioop import reverse
 from multiprocessing import Pool, Manager
 import pandas as pd
 import numpy as np
+import string
 
 
 def is_slice(data, num, shared):
@@ -19,19 +21,14 @@ def is_slice(data, num, shared):
                 continue
             if data[words] in data[comp]:
                 count[words] += 1
-    # condition = True
-    # word_index = None
-    # while condition:
-    #     for word, count_freq, index in zip(data, count, range(0, len(data))):
-    #         if count_freq == max(count) and len(word) <= 2:
-    #             count[index] = 0
-    #     for word, count_freq, index in zip(data, count, range(0, len(data))):
-    #         if count_freq == max(count) and len(word) <= 2:
-    #             break
-    #         if index == len(data):
-    #             condition = False
-
-    shared.append((data[word_index], num))
+    combined = list(map(lambda x, y: (x, y), data, count))
+    combined.sort(key=lambda x: x[1], reverse=True)
+    for x, y in zip(combined, range(0, len(combined))):
+        if len(str(x[0]).strip()) <= 4 or str(x[0]) in list(string.punctuation):
+            continue
+        else:
+            shared.append((data[y], num))
+            break
 
 
 def parallel_distributions(num_process, data):

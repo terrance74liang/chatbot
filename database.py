@@ -9,6 +9,8 @@ import math
 import os
 import pickle
 
+# add r python library for punctuation redo
+
 nlp = sp.load("en_core_web_sm")
 
 # form any column base dataset, enables selection of the text data column
@@ -37,18 +39,18 @@ def string_storing(text, string_st, list_man, incr, num):
             elif token.pos_.upper() == "PUNCT" and (
                 token.text not in string_st.get("PUNCT")
             ):
-                string_st.get("PUNCT").append((token.text, token.vector))
+                string_st.get("PUNCT").append((token.text, token.pos_, token.vector))
             elif token.text[0].lower() not in string_st.keys():
                 string_st[token.text[0].lower()] = list_man[incr.value]
                 string_st.get(token.text[0].lower()).append(
-                    (token.text.lower(), token.vector)
+                    (token.text.lower(), token.pos_, token.vector)
                 )
                 incr.value += 1
             elif token.text.lower() not in [
                 x[0] for x in string_st.get(token.text[0].lower())
             ]:
                 string_st.get(token.text[0].lower()).append(
-                    (token.text.lower(), token.vector)
+                    (token.text.lower(), token.pos_, token.vector)
                 )
             else:
                 continue
@@ -92,3 +94,8 @@ def csv_to_json(fileName):
         with open("list_of_vectors.pickle", "wb") as pickler:
             pickle.dump(obj=normal_list, file=pickler)
             return pickler.name
+
+
+def pos_extractor(sentence):
+    return [x.pos_ for x in nlp(sentence)]
+

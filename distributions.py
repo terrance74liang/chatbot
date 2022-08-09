@@ -1,4 +1,3 @@
-from audioop import reverse
 from multiprocessing import Pool, Manager
 import pandas as pd
 import numpy as np
@@ -38,12 +37,7 @@ def parallel_distributions(num_process, data):
             collection = mana.list()
             for num in range(0, max_label):
                 pool.apply(
-                    is_slice,
-                    (
-                        data[data["labels"] == num],
-                        num,
-                        collection,
-                    ),
+                    is_slice, (data[data["labels"] == num], num, collection,),
                 )
 
             pool.close()

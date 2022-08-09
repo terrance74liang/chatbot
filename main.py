@@ -12,18 +12,13 @@ twitter_file = (
 if __name__ == "__main__":
     # DATASET PREPARATION
 
-    # requires conda
-
     # name = csv_to_json(twitter_file)
-
-    # requires python 3.10
-    words, vectors = pickle_reader("list_of_vectors.pickle")
-    n_clusters = cluster_optimizer(vectors)
-    labels_and_words = spec_cluster(vectors, words, n_clusters)
-    labels_and_words.to_excel("testfile.xlsx", index=False)
+    # words, vectors, pos = pickle_reader("list_of_vectors.pickle")
+    # n_clusters = cluster_optimizer(vectors)
+    # labels_and_words = spec_cluster(vectors, words, n_clusters, pos)
+    # labels_and_words.to_excel("testfile.xlsx", index=False)
     data = pd.read_excel("testfile.xlsx")
     list_n_labels = parallel_distributions(
         num_process=max(list(data["labels"])) + 1, data=data
     )
 
-    # requires conda

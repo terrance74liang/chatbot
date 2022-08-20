@@ -44,6 +44,31 @@ def sequence_encoder(data):
     return [encoder(x) for x in pos_extractor(data)]
 
 
+# takes list of index
+def t_plus_encoder(data, point):
+    if point == "i":
+        individual_encoding = np.array(
+            [np.put(np.zeros(shape=(20, -1)), x, 1) for x in data]
+        )
+        return individual_encoding
+    elif point == "o":
+        individual_encoding = np.array(
+            [np.put(np.zeros(shape=(20, -1)), x, 1) for x in data]
+        )
+        t_minus_encoding = np.array(
+            [np.put(np.zeros(shape=(20, -1)), x, 1) for x in data[1:]].append(
+                np.zeros(shape=(20, -1))
+            )
+        )
+        t_minus_superposed = np.array()
+        for i, t in zip(individual_encoding, t_minus_encoding):
+            np.append(t_minus_superposed, np.add(i, t), axis=1)
+        t_minus_superposed[t_minus_superposed == 2] = 1
+        return individual_encoding, t_minus_superposed
+    else:
+        raise ValueError("need proper point value")
+
+
 data = (
     pd.read_csv("casual_data_windows.csv", index_col=0, nrows=1000, dtype="string")
     .iloc[:, 0:2]

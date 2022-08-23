@@ -61,18 +61,14 @@ def t_plus_encoder(data, point):
         data_mod = data[1:]
         flattened_indexing_t = [
             sum(data_mod[0 : i + 1]) + x + sum(m[0 : i + 1]) if i >= 0 else x
-            for x, i in zip(data, range(-1, 4))
-        ].insert(5, -500)
+            for x, i in zip(data_mod, range(-1, 4))
+        ]
+
         individual_encoding = np.array([np.zeros(shape=(20, 1)) for x in data])
         individual_encoding.put(flattened_indexing, 1)
         t_minus_encoding = np.array([np.zeros(shape=(20, 1)) for x in data])
         t_minus_encoding.put(flattened_indexing_t, 1)
-        t_minus_superposed = np.array()
-        for num, (i, t) in enumerate(zip(individual_encoding, t_minus_encoding)):
-            if num == 5:
-                np.append(t_minus_superposed, np.add(i, 0), axis=1)
-            else:
-                np.append(t_minus_superposed, np.add(i, t), axis=1)
+        t_minus_superposed = np.add(individual_encoding, t_minus_encoding)
         t_minus_superposed[t_minus_superposed == 2] = 1
         return individual_encoding, t_minus_superposed
     else:
@@ -85,24 +81,41 @@ data = (
     .astype("string")
 )
 
-conversational_data = data.applymap(
-    func=lambda x: sequence_encoder(x)[0:6] if len(x.split()) >= 6 else np.nan
-).dropna(how="any", axis=0)
+conversational_data = (
+    data.applymap(
+        func=lambda x: sequence_encoder(x)[0:6] if len(x.split()) >= 6 else np.nan
+    )
+    .dropna(how="any", axis=0)
+    .reset_index(drop=True)
+)
 
-# input_matrix = list()
-# output_matrix = list()
-# output_t = list()
 
-# for i in conversational_data.index.tolist():
-#     input_matrix = np.append(
-#         input_matrix, t_plus_encoder(conversational_data.iloc[i, 0], "i"), axis=0
-#     )
-# input_matrix = np.array(input_matrix)
-# output_matrix = np.array(output_matrix)
-# output_t = np.array(output_t)
-# print(input_matrix)
-print(conversational_data.iloc[0, 1])
-print(t_plus_encoder(conversational_data.iloc[0, 0], "o"))
+def martix_creation(data, direction):
+    input_matrix = None
+    output_matrix = None
+    output_t = None
+
+    if direction == "i":
+        for i in data.index.tolist():
+            if i == 0:
+                input_matrix = t_plus_encoder(data.iloc[i, 0], "i")
+            else:
+                input_matrix = np.append(
+                    input_matrix, t_plus_encoder(data.iloc[i, 0], "i"), axis=0
+                )
+        return input_matrix
+    if direction == "o":
+        for i in data.index.tolist():
+            if i == 0:
+                output_matrix, output_t = t_plus_encoder(data.iloc[i, 1], "o")
+            else:
+                p1, p2 = t_plus_encoder(data.iloc[i, 1], "o")
+                output_matrix = np.append(output_matrix, p1, axis=0)
+                output_t = np.append(output_matrix, p2, axis=0)
+        return output_matrix, output_t
+    else:
+        raise ValueError("need proper point value")
+
 
 # xtrain, xtest, ytrain, ytest = train_test_split(
 #     conversational_data.iloc[:, 0],

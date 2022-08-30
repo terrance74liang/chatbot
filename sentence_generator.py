@@ -42,14 +42,15 @@ def sequence_encoder(data):
 def t_plus_encoder(data, point):
     data = list(data)
     m = list(map(lambda a: 20 - a, data))
+    # list of index transformed into sequential array, used for flat index for np.put
     flattened_indexing = [
         sum(data[0 : i + 1]) + x + sum(m[0 : i + 1]) if i >= 0 else x
         for x, i in zip(data, range(-1, 5))
     ]
     if point == "i":
-        individual_encoding = np.array([np.zeros(shape=(20, 1)) for x in data])
+        individual_encoding = np.array([np.zeros(shape=(20)) for x in data])
         individual_encoding.put(flattened_indexing, 1)
-        return individual_encoding
+        return np.array([individual_encoding])
     elif point == "o":
         data_mod = data[1:]
         flattened_indexing_t = [
@@ -57,13 +58,13 @@ def t_plus_encoder(data, point):
             for x, i in zip(data_mod, range(-1, 4))
         ]
 
-        individual_encoding = np.array([np.zeros(shape=(20, 1)) for x in data])
+        individual_encoding = np.array([np.zeros(shape=(20)) for x in data])
         individual_encoding.put(flattened_indexing, 1)
-        t_minus_encoding = np.array([np.zeros(shape=(20, 1)) for x in data])
+        t_minus_encoding = np.array([np.zeros(shape=(20)) for x in data])
         t_minus_encoding.put(flattened_indexing_t, 1)
         t_minus_superposed = np.add(individual_encoding, t_minus_encoding)
         t_minus_superposed[t_minus_superposed == 2] = 1
-        return individual_encoding, t_minus_superposed
+        return np.array([individual_encoding]), np.array([t_minus_superposed])
     else:
         raise ValueError("need proper point value")
 
@@ -89,7 +90,7 @@ def martix_creation(data, direction):
             else:
                 p1, p2 = t_plus_encoder(data.iloc[i, 1], "o")
                 output_matrix = np.append(output_matrix, p1, axis=0)
-                output_t = np.append(output_matrix, p2, axis=0)
+                output_t = np.append(output_t, p2, axis=0)
         return output_matrix, output_t
     else:
         raise ValueError("need proper point value")
